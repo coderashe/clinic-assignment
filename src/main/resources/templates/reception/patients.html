@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('Patients')}"></head>
+<body class="bg-light">
+<div th:replace="~{fragments :: nav}"></div>
+<main class="container-fluid px-4">
+  <div th:replace="~{fragments :: flash}"></div>
+  <div class="row g-3">
+    <div class="col-lg-4">
+      <div class="card shadow-sm"><div class="card-header fw-semibold">Register patient</div>
+        <div class="card-body">
+          <form th:action="@{/reception/patients}" method="post">
+            <input class="form-control mb-2" name="nationalId" placeholder="National ID" required maxlength="32">
+            <div class="row g-2 mb-2">
+              <div class="col"><input class="form-control" name="firstName" placeholder="First name" required maxlength="80"></div>
+              <div class="col"><input class="form-control" name="lastName" placeholder="Last name" required maxlength="80"></div>
+            </div>
+            <input class="form-control mb-2" name="phone" placeholder="Phone (+263 77 123 4567)" required maxlength="20">
+            <input class="form-control mb-3" name="address" placeholder="Address" required maxlength="255">
+            <button class="btn btn-primary w-100" type="submit"><i class="fa-solid fa-user-plus"></i> Register</button>
+          </form>
+        </div></div>
+    </div>
+    <div class="col-lg-8">
+      <div class="card shadow-sm"><div class="card-header">
+        <form th:action="@{/reception/patients}" method="get" class="d-flex gap-2">
+          <input class="form-control" name="q" th:value="${q}" placeholder="Search by name or National ID">
+          <button class="btn btn-outline-primary" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </form></div>
+        <div class="table-responsive"><table class="table table-hover mb-0 align-middle">
+          <thead><tr><th>Name</th><th>National ID</th><th>Phone</th><th>Address</th><th>Registered</th></tr></thead>
+          <tbody>
+            <tr th:each="p : ${patients}">
+              <td th:text="${p.fullName}"></td>
+              <td><span sec:authorize="hasRole('RECEPTIONIST')" th:text="${p.nationalId}"></span>
+                  <span sec:authorize="!hasRole('RECEPTIONIST')" th:text="${p.maskedNationalId()}"></span></td>
+              <td><span sec:authorize="hasRole('RECEPTIONIST')" th:text="${p.phone}"></span>
+                  <span sec:authorize="!hasRole('RECEPTIONIST')" th:text="${p.maskedPhone()}"></span></td>
+              <td><span sec:authorize="hasRole('RECEPTIONIST')" th:text="${p.address}"></span>
+                  <span sec:authorize="!hasRole('RECEPTIONIST')">hidden</span></td>
+              <td th:text="${#temporals.format(p.createdAt,'dd MMM yyyy')}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(patients)}"><td colspan="5" class="text-center text-muted py-4">No patients found.</td></tr>
+          </tbody></table></div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

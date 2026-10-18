@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Appointments')}"></head>
+<body class="bg-light">
+<div th:replace="~{fragments :: nav}"></div>
+<main class="container-fluid px-4">
+  <div th:replace="~{fragments :: flash}"></div>
+  <div class="row g-3">
+    <div class="col-xl-3 col-lg-4">
+      <div class="card shadow-sm"><div class="card-header fw-semibold">Book appointment</div>
+        <div class="card-body">
+          <form th:action="@{/reception/appointments}" method="post">
+            <input class="form-control mb-2" name="nationalId" placeholder="Patient National ID" required>
+            <select class="form-select mb-2" name="clinicianId" required>
+              <option value="">Clinician...</option>
+              <option th:each="c : ${clinicians}" th:value="${c.id}" th:text="${c.displayName()} + ' - ' + ${c.roomNumber}"></option>
+            </select>
+            <input class="form-control mb-2" type="datetime-local" name="start" step="900" required>
+            <select class="form-select mb-3" name="duration">
+              <option th:each="d : ${durations}" th:value="${d}" th:text="${d} + ' minutes'" th:selected="${d == defaultDuration}"></option>
+            </select>
+            <button class="btn btn-primary w-100" type="submit"><i class="fa-solid fa-calendar-plus"></i> Book</button>
+          </form>
+        </div></div>
+    </div>
+    <div class="col-xl-9 col-lg-8">
+      <div class="card shadow-sm mb-3"><div class="card-body">
+        <form th:action="@{/reception/appointments}" method="get" class="row g-2">
+          <div class="col-md-3"><input class="form-control" name="name" th:value="${name}" placeholder="Patient name"></div>
+          <div class="col-md-2"><input class="form-control" name="nationalId" th:value="${nationalId}" placeholder="National ID"></div>
+          <div class="col-md-2"><input class="form-control" type="date" name="from" th:value="${from}" title="From"></div>
+          <div class="col-md-2"><input class="form-control" type="date" name="to" th:value="${to}" title="To"></div>
+          <div class="col-md-3"><select class="form-select" name="clinicianId">
+            <option value="">All clinicians</option>
+            <option th:each="c : ${clinicians}" th:value="${c.id}" th:text="${c.displayName()}" th:selected="${c.id == clinicianId}"></option>
+          </select></div>
+          <div class="col-md-3"><select class="form-select" name="status">
+            <option value="">Any status</option>
+            <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}" th:selected="${s == status}"></option>
+          </select></div>
+          <div class="col-md-2"><button class="btn btn-outline-primary w-100" type="submit"><i class="fa-solid fa-filter"></i> Filter</button></div>
+        </form>
+      </div></div>
+      <div class="card shadow-sm"><div class="table-responsive"><table class="table table-hover mb-0 align-middle">
+        <thead><tr><th>When</th><th>Patient</th><th>Clinician</th><th>Length</th><th>Status</th><th style="min-width:280px">Actions</th></tr></thead>
+        <tbody>
+          <tr th:each="a : ${appointments}">
+            <td th:text="${#temporals.format(a.appointmentTimestamp,'EEE dd MMM HH:mm')}"></td>
+            <td><div th:text="${a.patient.fullName}"></div><small class="text-muted" th:text="${a.patient.nationalId}"></small></td>
+            <td th:text="${a.clinician.displayName()}"></td>
+            <td th:text="${a.durationMinutes} + ' min'"></td>
+            <td><span class="badge" th:classappend="${a.status.badge()}" th:text="${a.status}"></span></td>
+            <td>
+              <th:block th:if="${a.status.name() == 'BOOKED'}">
+                <form th:action="@{/reception/appointments/{id}/checkin(id=${a.id})}" method="post" class="d-flex gap-1 mb-1">
+                  <select name="priority" class="form-select form-select-sm">
+                    <option th:each="p : ${priorities}" th:value="${p}" th:text="${p}" th:selected="${p.name() == 'NORMAL'}"></option>
+                  </select>
+                  <button class="btn btn-sm btn-success text-nowrap" type="submit">Check in</button>
+                </form>
+                <details>
+                  <summary class="small text-primary" style="cursor:pointer">Reschedule / cancel</summary>
+                  <form th:action="@{/reception/appointments/{id}/reschedule(id=${a.id})}" method="post" class="d-flex gap-1 mt-1">
+                    <input type="datetime-local" name="start" class="form-control form-control-sm" step="900" required>
+                    <select name="duration" class="form-select form-select-sm" style="width:90px">
+                      <option th:each="d : ${durations}" th:value="${d}" th:text="${d}" th:selected="${d == a.durationMinutes}"></option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Move</button>
+                  </form>
+                  <form th:action="@{/reception/appointments/{id}/cancel(id=${a.id})}" method="post" class="mt-1"
+                        onsubmit="return confirm('Cancel this appointment?')">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">Cancel appointment</button>
+                  </form>
+                </details>
+              </th:block>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(appointments)}"><td colspan="6" class="text-center text-muted py-4">No appointments match.</td></tr>
+        </tbody></table></div></div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

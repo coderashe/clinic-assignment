@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Sign in')}"></head>
+<body class="bg-light">
+<div class="container" style="max-width:420px;margin-top:10vh">
+  <div class="card shadow-sm"><div class="card-body p-4">
+    <h4 class="mb-3"><i class="fa-solid fa-house-medical text-primary"></i> Community Clinic</h4>
+    <div th:if="${param.error}" class="alert alert-danger">Invalid username or password.</div>
+    <div th:if="${param.logout}" class="alert alert-info">You have been signed out.</div>
+    <form th:action="@{/login}" method="post">
+      <div class="mb-3"><label class="form-label">Username</label>
+        <input name="username" class="form-control" required autofocus autocomplete="username"></div>
+      <div class="mb-3"><label class="form-label">Password</label>
+        <input name="password" type="password" class="form-control" required autocomplete="current-password"></div>
+      <button class="btn btn-primary w-100" type="submit">Sign in</button>
+    </form>
+  </div></div>
+</div>
+</body>
+</html>

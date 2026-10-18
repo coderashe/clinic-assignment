@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments :: head('My queue')}"></head>
+<body class="bg-light">
+<div th:replace="~{fragments :: nav}"></div>
+<main class="container-fluid px-4">
+  <div th:replace="~{fragments :: flash}"></div>
+  <h5><i class="fa-solid fa-user-doctor"></i> <span th:text="${clinician.displayName()}"></span>
+    <small class="text-muted" th:text="'- ' + ${clinician.specialization} + ', ' + ${clinician.roomNumber}"></small></h5>
+  <div class="row g-3 mt-1">
+    <div class="col-lg-8">
+      <div class="card shadow-sm mb-3 border-success" th:if="${current != null}">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div><div class="text-muted small">Currently with you</div>
+            <div class="fs-5" th:text="${current.appointment.patient.fullName}"></div>
+            <span class="badge" th:classappend="${current.priorityLevel.badge()}" th:text="${current.priorityLevel}"></span></div>
+          <a class="btn btn-success" th:href="@{/clinician/visits/{id}(id=${current.id})}">Open visit <i class="fa-solid fa-arrow-right"></i></a>
+        </div></div>
+      <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">Waiting (<span th:text="${#lists.size(waiting)}">0</span>)</span>
+          <form th:action="@{/clinician/queue/next}" method="post" class="m-0">
+            <button class="btn btn-sm btn-primary" type="submit" th:disabled="${current != null or #lists.isEmpty(waiting)}">
+              <i class="fa-solid fa-bell"></i> Call next</button>
+          </form></div>
+        <div class="table-responsive"><table class="table mb-0 align-middle">
+          <thead><tr><th>#</th><th>Patient</th><th>National ID</th><th>Priority</th><th>Checked in</th><th>Est. wait</th></tr></thead>
+          <tbody>
+            <tr th:each="q : ${waiting}">
+              <td th:text="${q.position}"></td>
+              <td th:text="${q.appointment.patient.fullName}"></td>
+              <td th:text="${q.appointment.patient.maskedNationalId()}"></td>
+              <td><span class="badge" th:classappend="${q.priorityLevel.badge()}" th:text="${q.priorityLevel}"></span></td>
+              <td th:text="${#temporals.format(q.checkInTime,'HH:mm')}"></td>
+              <td th:text="${q.estimatedWaitMinutes} + ' min'"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(waiting)}"><td colspan="6" class="text-center text-muted py-3">Nobody is waiting.</td></tr>
+          </tbody></table></div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card shadow-sm mb-3"><div class="card-header fw-semibold">Booked today, not yet arrived</div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item" th:each="a : ${booked}">
+            <strong th:text="${#temporals.format(a.appointmentTimestamp,'HH:mm')}"></strong>
+            <span th:text="${a.patient.fullName}"></span></li>
+          <li class="list-group-item text-muted" th:if="${#lists.isEmpty(booked)}">None</li>
+        </ul></div>
+      <div class="card shadow-sm"><div class="card-header fw-semibold">Completed today</div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item d-flex justify-content-between" th:each="v : ${done}">
+            <span th:text="${v.queueEntry.appointment.patient.fullName}"></span>
+            <a th:href="@{/clinician/visits/{id}(id=${v.queueEntry.id})}">view</a></li>
+          <li class="list-group-item text-muted" th:if="${#lists.isEmpty(done)}">None yet</li>
+        </ul></div>
+    </div>
+  </div>
+</main>
+<script>setTimeout(function () { location.reload(); }, 60000);</script>
+</body>
+</html>

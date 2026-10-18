@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Live queue')}"></head>
+<body class="bg-light">
+<div th:replace="~{fragments :: nav}"></div>
+<main class="container-fluid px-4">
+  <div th:replace="~{fragments :: flash}"></div>
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="m-0"><i class="fa-solid fa-list-ol"></i> Live queue <small class="text-muted">(refreshes every 60s)</small></h5>
+  </div>
+  <div class="card shadow-sm"><div class="table-responsive"><table class="table table-hover mb-0 align-middle">
+    <thead><tr><th>#</th><th>Patient</th><th>Clinician</th><th>Priority</th><th>Status</th><th>Checked in</th><th>Est. wait</th></tr></thead>
+    <tbody>
+      <tr th:each="q : ${entries}">
+        <td th:text="${q.queueStatus.name() == 'WAITING' ? q.position : '-'}"></td>
+        <td th:text="${q.appointment.patient.fullName}"></td>
+        <td th:text="${q.appointment.clinician.displayName()}"></td>
+        <td><span class="badge" th:classappend="${q.priorityLevel.badge()}" th:text="${q.priorityLevel}"></span></td>
+        <td><span class="badge" th:classappend="${q.queueStatus.name() == 'WAITING'} ? 'text-bg-light border' : 'text-bg-success'" th:text="${q.queueStatus}"></span></td>
+        <td th:text="${#temporals.format(q.checkInTime,'HH:mm')}"></td>
+        <td th:text="${q.queueStatus.name() == 'WAITING' ? q.estimatedWaitMinutes + ' min' : 'with clinician'}"></td>
+      </tr>
+      <tr th:if="${#lists.isEmpty(entries)}"><td colspan="7" class="text-center text-muted py-4">The queue is empty.</td></tr>
+    </tbody></table></div></div>
+</main>
+<script>setTimeout(function () { location.reload(); }, 60000);</script>
+</body>
+</html>

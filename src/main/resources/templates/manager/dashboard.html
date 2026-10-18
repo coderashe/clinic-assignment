@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Dashboard')}"></head>
+<body class="bg-light">
+<div th:replace="~{fragments :: nav}"></div>
+<main class="container-fluid px-4">
+  <div th:replace="~{fragments :: flash}"></div>
+  <form th:action="@{/manager/dashboard}" method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-auto"><label class="form-label small mb-0">Day</label><input class="form-control" type="date" name="date" th:value="${date}"></div>
+    <div class="col-auto"><label class="form-label small mb-0">Month</label><input class="form-control" type="month" name="month" th:value="${month}"></div>
+    <div class="col-auto"><button class="btn btn-primary" type="submit"><i class="fa-solid fa-rotate"></i> Update</button></div>
+  </form>
+
+  <div class="row g-3 mb-3">
+    <div class="col-md-6" th:each="s : ${summaries}">
+      <div class="card shadow-sm"><div class="card-header fw-semibold" th:text="${s.label}"></div>
+        <div class="card-body"><div class="row text-center">
+          <div class="col"><div class="fs-4" th:text="${s.appointments}"></div><small class="text-muted">Appointments</small></div>
+          <div class="col"><div class="fs-4" th:text="${s.cancelled}"></div><small class="text-muted">Cancelled</small></div>
+          <div class="col"><div class="fs-4" th:text="${s.checkIns}"></div><small class="text-muted">Check-ins</small></div>
+          <div class="col"><div class="fs-4" th:text="${s.completedVisits}"></div><small class="text-muted">Completed</small></div>
+          <div class="col"><div class="fs-4" th:text="${#numbers.formatDecimal(s.averageWaitMinutes,1,1)}"></div><small class="text-muted">Avg wait (min)</small></div>
+        </div></div></div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-6">
+      <div class="card shadow-sm h-100"><div class="card-header fw-semibold">Peak hours (check-ins, selected month)</div>
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-1" th:each="e : ${peak}">
+            <div style="width:60px" th:text="${#numbers.formatInteger(e.key,2)} + ':00'"></div>
+            <div class="progress flex-grow-1" style="height:18px"><div class="progress-bar" th:style="'width:' + ${e.value * 100 / peakMax} + '%'"></div></div>
+            <div class="ms-2" style="width:40px" th:text="${e.value}"></div>
+          </div>
+          <div class="text-muted" th:if="${#maps.isEmpty(peak)}">No check-ins in this period.</div>
+        </div></div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card shadow-sm h-100"><div class="card-header fw-semibold">Waiting time by priority (minutes, selected month)</div>
+        <table class="table mb-0"><thead><tr><th>Priority</th><th>Patients</th><th>Mean</th><th>Median</th></tr></thead><tbody>
+          <tr th:each="e : ${waits}">
+            <td><span class="badge" th:classappend="${e.key.badge()}" th:text="${e.key}"></span></td>
+            <td th:text="${e.value.samples}"></td>
+            <td th:text="${#numbers.formatDecimal(e.value.mean,1,1)}"></td>
+            <td th:text="${#numbers.formatDecimal(e.value.median,1,1)}"></td>
+          </tr>
+          <tr th:if="${#maps.isEmpty(waits)}"><td colspan="4" class="text-muted text-center">No data.</td></tr>
+        </tbody></table></div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card shadow-sm h-100"><div class="card-header fw-semibold">Clinician throughput (completed consultations)</div>
+        <table class="table mb-0"><thead><tr><th>Clinician</th><th>Selected day</th><th>Selected month</th></tr></thead><tbody>
+          <tr th:each="m : ${monthlyThroughput}">
+            <td th:text="${m.clinician}"></td>
+            <td th:text="${dailyByClinician.get(m.clinician) ?: 0}"></td>
+            <td th:text="${m.completed}"></td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(monthlyThroughput)}"><td colspan="3" class="text-muted text-center">No completed consultations.</td></tr>
+        </tbody></table></div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card shadow-sm h-100"><div class="card-header fw-semibold">Demand forecast - next 7 days (8-week weekday average)</div>
+        <table class="table mb-0"><thead><tr><th>Date</th><th>Day</th><th>Expected appointments</th></tr></thead><tbody>
+          <tr th:each="f : ${forecast}">
+            <td th:text="${#temporals.format(f.date,'dd MMM')}"></td>
+            <td th:text="${f.day}"></td>
+            <td th:text="${#numbers.formatDecimal(f.expectedAppointments,1,1)}"></td>
+          </tr>
+        </tbody></table></div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

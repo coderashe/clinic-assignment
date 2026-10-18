@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Visit')}"></head>
+<body class="bg-light">
+<div th:replace="~{fragments :: nav}"></div>
+<main class="container" style="max-width:860px">
+  <div th:replace="~{fragments :: flash}"></div>
+  <div class="card shadow-sm mb-3"><div class="card-body">
+    <div class="d-flex justify-content-between">
+      <div>
+        <h5 class="mb-1" th:text="${visit.queueEntry.appointment.patient.fullName}"></h5>
+        <div class="text-muted small">National ID <span th:text="${visit.queueEntry.appointment.patient.maskedNationalId()}"></span>
+          &middot; Phone <span th:text="${visit.queueEntry.appointment.patient.maskedPhone()}"></span></div>
+      </div>
+      <div class="text-end">
+        <span class="badge" th:classappend="${visit.queueEntry.priorityLevel.badge()}" th:text="${visit.queueEntry.priorityLevel}"></span>
+        <div class="small text-muted mt-1">Started <span th:text="${#temporals.format(visit.startTime,'HH:mm')}"></span>
+          <span th:if="${visit.endTime != null}">&middot; Ended <span th:text="${#temporals.format(visit.endTime,'HH:mm')}"></span></span></div>
+      </div>
+    </div></div></div>
+  <form th:action="@{/clinician/visits/{id}/save(id=${visit.queueEntry.id})}" method="post" class="card shadow-sm">
+    <div class="card-body">
+      <label class="form-label fw-semibold">Consultation outcome / diagnosis notes</label>
+      <textarea class="form-control mb-3" name="diagnosis" rows="6" maxlength="5000" th:text="${visit.diagnosisNotes}"></textarea>
+      <label class="form-label fw-semibold">Prescription summary</label>
+      <textarea class="form-control mb-3" name="prescription" rows="4" maxlength="5000" th:text="${visit.prescriptionSummary}"></textarea>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save notes</button>
+        <button class="btn btn-success" type="submit" th:if="${visit.endTime == null}"
+                th:formaction="@{/clinician/visits/{id}/complete(id=${visit.queueEntry.id})}"
+                onclick="return confirm('Mark this visit as complete?')"><i class="fa-solid fa-check"></i> Complete visit</button>
+        <a class="btn btn-link ms-auto" th:href="@{/clinician/queue}">Back to queue</a>
+      </div>
+    </div>
+  </form>
+</main>
+</body>
+</html>
