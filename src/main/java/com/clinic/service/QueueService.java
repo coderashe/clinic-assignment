@@ -101,8 +101,25 @@ public class QueueService {
 
     // ------------------------------------------------------------------ queries
 
-    @Transactional(readOnly = true)
+    public void autoCheckInTodayBookings() {
+        LocalDate today = LocalDate.now(clock);
+        List<Appointment> todayBooked = appointments.findByStatusAndAppointmentTimestampBetween(
+                AppointmentStatus.BOOKED, today.atStartOfDay(), today.plusDays(1).atStartOfDay());
+        for (Appointment a : todayBooked) {
+            try {
+                tx.executeWithoutResult(s -> {
+                    if (queue.findByAppointmentId(a.getId()).isEmpty()) {
+                        checkIn(a.getId(), Priority.NORMAL);
+                    }
+                });
+            } catch (Exception e) {
+                log.warn("Auto check-in failed for appointment {}: {}", a.getId(), e.getMessage());
+            }
+        }
+    }
+
     public List<QueueEntry> liveQueue() {
+        autoCheckInTodayBookings();
         return queue.findByQueueStatusIn(List.of(QueueStatus.WAITING, QueueStatus.WITH_CLINICIAN)).stream()
                 .sorted(Comparator.<QueueEntry, Long>comparing(q -> q.getAppointment().getClinician().getId())
                         .thenComparing(QueueEntry::getQueueStatus)
@@ -110,8 +127,8 @@ public class QueueService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
     public List<QueueEntry> clinicianQueue(String username) {
+        autoCheckInTodayBookings();
         Clinician c = clinicianFor(username);
         return queue.findByAppointmentClinicianIdAndQueueStatusIn(
                         c.getId(), List.of(QueueStatus.WAITING, QueueStatus.WITH_CLINICIAN)).stream()

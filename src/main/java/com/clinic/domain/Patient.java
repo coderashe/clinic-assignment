@@ -25,6 +25,9 @@ public class Patient {
     @Column(nullable = false, length = 30)
     private String phone;
 
+    @Column(length = 120)
+    private String email;
+
     @Column(nullable = false, length = 255)
     private String address;
 
@@ -46,6 +49,14 @@ public class Patient {
     // ---- field-level protection: non-receptionist views must use these ----
     public String maskedNationalId() { return mask(nationalId, 3); }
     public String maskedPhone() { return mask(phone, 3); }
+    public String maskedEmail() {
+        if (email == null || !email.contains("@")) return "****";
+        int at = email.indexOf('@');
+        String name = email.substring(0, at);
+        String domain = email.substring(at);
+        if (name.length() <= 2) return "*".repeat(name.length()) + domain;
+        return name.charAt(0) + "*".repeat(name.length() - 2) + name.charAt(name.length() - 1) + domain;
+    }
 
     private static String mask(String s, int keep) {
         if (s == null || s.length() <= keep) return "****";

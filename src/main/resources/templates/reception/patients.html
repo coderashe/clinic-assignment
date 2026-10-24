@@ -9,14 +9,68 @@
     <div class="col-lg-4">
       <div class="card shadow-sm"><div class="card-header fw-semibold">Register patient</div>
         <div class="card-body">
-          <form th:action="@{/reception/patients}" method="post">
-            <input class="form-control mb-2" name="nationalId" placeholder="National ID" required maxlength="32">
-            <div class="row g-2 mb-2">
-              <div class="col"><input class="form-control" name="firstName" placeholder="First name" required maxlength="80"></div>
-              <div class="col"><input class="form-control" name="lastName" placeholder="Last name" required maxlength="80"></div>
+          <form th:action="@{/reception/patients}" th:object="${patientForm}" method="post" class="needs-validation" novalidate id="patientForm">
+            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger p-2 mb-2">
+              <div th:each="err : ${#fields.globalErrors()}" th:text="${err}"></div>
             </div>
-            <input class="form-control mb-2" name="phone" placeholder="Phone (+263 77 123 4567)" required maxlength="20">
-            <input class="form-control mb-3" name="address" placeholder="Address" required maxlength="255">
+
+            <div class="mb-2">
+              <label class="form-label small text-muted mb-1" for="nationalId">National ID</label>
+              <input id="nationalId" class="form-control" th:field="*{nationalId}"
+                     th:classappend="${#fields.hasErrors('nationalId')} ? 'is-invalid' : ''"
+                     placeholder="e.g. 63-123456A12" required pattern="^[A-Za-z0-9-]{5,32}$" maxlength="32">
+              <div class="invalid-feedback" th:if="${#fields.hasErrors('nationalId')}" th:errors="*{nationalId}"></div>
+              <div class="invalid-feedback" th:unless="${#fields.hasErrors('nationalId')}">National ID must be 5-32 letters, digits, or dashes.</div>
+            </div>
+
+            <div class="row g-2 mb-2">
+              <div class="col">
+                <label class="form-label small text-muted mb-1" for="firstName">First name</label>
+                <input id="firstName" class="form-control" th:field="*{firstName}"
+                       th:classappend="${#fields.hasErrors('firstName')} ? 'is-invalid' : ''"
+                       placeholder="First name" required maxlength="80">
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}"></div>
+                <div class="invalid-feedback" th:unless="${#fields.hasErrors('firstName')}">First name is required.</div>
+              </div>
+              <div class="col">
+                <label class="form-label small text-muted mb-1" for="lastName">Last name</label>
+                <input id="lastName" class="form-control" th:field="*{lastName}"
+                       th:classappend="${#fields.hasErrors('lastName')} ? 'is-invalid' : ''"
+                       placeholder="Last name" required maxlength="80">
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></div>
+                <div class="invalid-feedback" th:unless="${#fields.hasErrors('lastName')}">Last name is required.</div>
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label small text-muted mb-1" for="email">Email</label>
+              <input id="email" type="email" class="form-control" th:field="*{email}"
+                     th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''"
+                     placeholder="patient@example.com" required maxlength="120"
+                     pattern="^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$">
+              <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+              <div class="invalid-feedback" th:unless="${#fields.hasErrors('email')}">Please provide a valid email address.</div>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label small text-muted mb-1" for="phone">Phone</label>
+              <input id="phone" type="tel" class="form-control" th:field="*{phone}"
+                     th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid' : ''"
+                     placeholder="+263 77 123 4567" required maxlength="20"
+                     pattern="^\+?[0-9 ()-]{7,20}$">
+              <div class="invalid-feedback" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
+              <div class="invalid-feedback" th:unless="${#fields.hasErrors('phone')}">Phone number must be 7-20 digits.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small text-muted mb-1" for="address">Address</label>
+              <input id="address" class="form-control" th:field="*{address}"
+                     th:classappend="${#fields.hasErrors('address')} ? 'is-invalid' : ''"
+                     placeholder="Residential address" required maxlength="255">
+              <div class="invalid-feedback" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
+              <div class="invalid-feedback" th:unless="${#fields.hasErrors('address')}">Address is required.</div>
+            </div>
+
             <button class="btn btn-primary w-100" type="submit"><i class="fa-solid fa-user-plus"></i> Register</button>
           </form>
         </div></div>
@@ -28,23 +82,40 @@
           <button class="btn btn-outline-primary" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
         </form></div>
         <div class="table-responsive"><table class="table table-hover mb-0 align-middle">
-          <thead><tr><th>Name</th><th>National ID</th><th>Phone</th><th>Address</th><th>Registered</th></tr></thead>
+          <thead><tr><th>Name</th><th>National ID</th><th>Email</th><th>Phone</th><th>Address</th><th>Registered</th></tr></thead>
           <tbody>
             <tr th:each="p : ${patients}">
               <td th:text="${p.fullName}"></td>
               <td><span sec:authorize="hasRole('RECEPTIONIST')" th:text="${p.nationalId}"></span>
                   <span sec:authorize="!hasRole('RECEPTIONIST')" th:text="${p.maskedNationalId()}"></span></td>
+              <td><span sec:authorize="hasRole('RECEPTIONIST')" th:text="${p.email ?: '-'}"></span>
+                  <span sec:authorize="!hasRole('RECEPTIONIST')" th:text="${p.maskedEmail()}"></span></td>
               <td><span sec:authorize="hasRole('RECEPTIONIST')" th:text="${p.phone}"></span>
                   <span sec:authorize="!hasRole('RECEPTIONIST')" th:text="${p.maskedPhone()}"></span></td>
               <td><span sec:authorize="hasRole('RECEPTIONIST')" th:text="${p.address}"></span>
                   <span sec:authorize="!hasRole('RECEPTIONIST')">hidden</span></td>
               <td th:text="${#temporals.format(p.createdAt,'dd MMM yyyy')}"></td>
             </tr>
-            <tr th:if="${#lists.isEmpty(patients)}"><td colspan="5" class="text-center text-muted py-4">No patients found.</td></tr>
+            <tr th:if="${#lists.isEmpty(patients)}"><td colspan="6" class="text-center text-muted py-4">No patients found.</td></tr>
           </tbody></table></div>
       </div>
     </div>
   </div>
 </main>
+<script>
+  (function () {
+    'use strict';
+    const form = document.getElementById('patientForm');
+    if (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    }
+  })();
+</script>
 </body>
 </html>

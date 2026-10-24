@@ -10,6 +10,7 @@
       <div>
         <h5 class="mb-1" th:text="${visit.queueEntry.appointment.patient.fullName}"></h5>
         <div class="text-muted small">National ID <span th:text="${visit.queueEntry.appointment.patient.maskedNationalId()}"></span>
+          &middot; Email <span th:text="${visit.queueEntry.appointment.patient.maskedEmail()}"></span>
           &middot; Phone <span th:text="${visit.queueEntry.appointment.patient.maskedPhone()}"></span></div>
       </div>
       <div class="text-end">
@@ -18,12 +19,36 @@
           <span th:if="${visit.endTime != null}">&middot; Ended <span th:text="${#temporals.format(visit.endTime,'HH:mm')}"></span></span></div>
       </div>
     </div></div></div>
-  <form th:action="@{/clinician/visits/{id}/save(id=${visit.queueEntry.id})}" method="post" class="card shadow-sm">
+  <form th:action="@{/clinician/visits/{id}/save(id=${visit.queueEntry.id})}" th:object="${visitNotesForm}" method="post" class="card shadow-sm needs-validation" novalidate id="visitForm">
     <div class="card-body">
-      <label class="form-label fw-semibold">Consultation outcome / diagnosis notes</label>
-      <textarea class="form-control mb-3" name="diagnosis" rows="6" maxlength="5000" th:text="${visit.diagnosisNotes}"></textarea>
-      <label class="form-label fw-semibold">Prescription summary</label>
-      <textarea class="form-control mb-3" name="prescription" rows="4" maxlength="5000" th:text="${visit.prescriptionSummary}"></textarea>
+      <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger p-2 mb-2">
+        <div th:each="err : ${#fields.globalErrors()}" th:text="${err}"></div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="diagnosisInput">Consultation outcome / diagnosis notes</label>
+        <textarea id="diagnosisInput" class="form-control" th:field="*{diagnosis}" rows="6" maxlength="5000"
+                  th:classappend="${#fields.hasErrors('diagnosis')} ? 'is-invalid' : ''"
+                  placeholder="Enter diagnosis findings, symptoms and consultation summary..."></textarea>
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('diagnosis')}" th:errors="*{diagnosis}"></div>
+        <div class="d-flex justify-content-between text-muted small mt-1">
+          <span>Clinical findings & examination notes</span>
+          <span id="diagnosisCounter">0 / 5000</span>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="prescriptionInput">Prescription summary</label>
+        <textarea id="prescriptionInput" class="form-control" th:field="*{prescription}" rows="4" maxlength="5000"
+                  th:classappend="${#fields.hasErrors('prescription')} ? 'is-invalid' : ''"
+                  placeholder="Prescribed drugs, dosage instructions and medical advice..."></textarea>
+        <div class="invalid-feedback" th:if="${#fields.hasErrors('prescription')}" th:errors="*{prescription}"></div>
+        <div class="d-flex justify-content-between text-muted small mt-1">
+          <span>Prescription details and follow-up guidance</span>
+          <span id="prescriptionCounter">0 / 5000</span>
+        </div>
+      </div>
+
       <div class="d-flex gap-2">
         <button class="btn btn-outline-primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Save notes</button>
         <button class="btn btn-success" type="submit" th:if="${visit.endTime == null}"
@@ -34,5 +59,43 @@
     </div>
   </form>
 </main>
+
+<script>
+  (function () {
+    'use strict';
+    function attachCounter(textareaId, counterId, maxLen) {
+      const textarea = document.getElementById(textareaId);
+      const counter = document.getElementById(counterId);
+      if (!textarea || !counter) return;
+      function update() {
+        const len = textarea.value.length;
+        counter.textContent = `${len} / ${maxLen}`;
+        if (len > maxLen) {
+          counter.classList.add('text-danger');
+          textarea.setCustomValidity('Exceeded character limit.');
+        } else {
+          counter.classList.remove('text-danger');
+          textarea.setCustomValidity('');
+        }
+      }
+      textarea.addEventListener('input', update);
+      update();
+    }
+
+    attachCounter('diagnosisInput', 'diagnosisCounter', 5000);
+    attachCounter('prescriptionInput', 'prescriptionCounter', 5000);
+
+    const form = document.getElementById('visitForm');
+    if (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    }
+  })();
+</script>
 </body>
 </html>

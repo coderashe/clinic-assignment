@@ -5,16 +5,68 @@
 <div class="container" style="max-width:420px;margin-top:10vh">
   <div class="card shadow-sm"><div class="card-body p-4">
     <h4 class="mb-3"><i class="fa-solid fa-house-medical text-primary"></i> Community Clinic</h4>
-    <div th:if="${param.error}" class="alert alert-danger">Invalid username or password.</div>
-    <div th:if="${param.logout}" class="alert alert-info">You have been signed out.</div>
-    <form th:action="@{/login}" method="post">
-      <div class="mb-3"><label class="form-label">Username</label>
-        <input name="username" class="form-control" required autofocus autocomplete="username"></div>
-      <div class="mb-3"><label class="form-label">Password</label>
-        <input name="password" type="password" class="form-control" required autocomplete="current-password"></div>
-      <button class="btn btn-primary w-100" type="submit">Sign in</button>
+    <div th:if="${param.error}" class="alert alert-danger d-flex align-items-center gap-2">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>Invalid username or password.</span>
+    </div>
+    <div th:if="${param.logout}" class="alert alert-info d-flex align-items-center gap-2">
+      <i class="fa-solid fa-circle-info"></i>
+      <span>You have been signed out.</span>
+    </div>
+    <form th:action="@{/login}" method="post" class="needs-validation" novalidate id="loginForm">
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="username">Username</label>
+        <div class="input-group has-validation">
+          <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+          <input id="username" name="username" class="form-control" required minlength="3" maxlength="60"
+                 pattern="^[A-Za-z0-9._-]+$" autofocus autocomplete="username"
+                 placeholder="Enter username">
+          <div class="invalid-feedback">Username must be at least 3 alphanumeric characters.</div>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="password">Password</label>
+        <div class="input-group has-validation">
+          <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+          <input id="password" name="password" type="password" class="form-control" required minlength="4" maxlength="100"
+                 autocomplete="current-password" placeholder="Enter password">
+          <button class="btn btn-outline-secondary" type="button" id="togglePassword" title="Show/Hide Password">
+            <i class="fa-solid fa-eye" id="togglePasswordIcon"></i>
+          </button>
+          <div class="invalid-feedback">Password is required (minimum 4 characters).</div>
+        </div>
+      </div>
+      <button class="btn btn-primary w-100" type="submit"><i class="fa-solid fa-right-to-bracket"></i> Sign in</button>
     </form>
   </div></div>
 </div>
+
+<script>
+  (function () {
+    'use strict';
+    const form = document.getElementById('loginForm');
+    const toggleBtn = document.getElementById('togglePassword');
+    const pwdInput = document.getElementById('password');
+    const pwdIcon = document.getElementById('togglePasswordIcon');
+
+    if (toggleBtn && pwdInput) {
+      toggleBtn.addEventListener('click', function () {
+        const type = pwdInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        pwdInput.setAttribute('type', type);
+        pwdIcon.className = type === 'password' ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+      });
+    }
+
+    if (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    }
+  })();
+</script>
 </body>
 </html>

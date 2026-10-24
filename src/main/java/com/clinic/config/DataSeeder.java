@@ -33,8 +33,8 @@ public class DataSeeder implements CommandLineRunner {
         clinician(user("dr.moyo", "Dr. Tendai Moyo", Role.CLINICIAN, hash), "General Practice", "Room 1");
         clinician(user("dr.ncube", "Dr. Sipho Ncube", Role.CLINICIAN, hash), "Paediatrics", "Room 2");
 
-        patient("63-123456A12", "Tafara", "Dube", "+263 77 123 4567", "12 Samora Machel Ave, Harare");
-        patient("63-654321B34", "Chipo", "Sibanda", "+263 71 765 4321", "8 Jason Moyo St, Bulawayo");
+        patient("63-123456A12", "Tafara", "Dube", "tafara.dube@example.com", "+263 77 123 4567", "12 Samora Machel Ave, Harare");
+        patient("63-654321B34", "Chipo", "Sibanda", "chipo.sibanda@example.com", "+263 71 765 4321", "8 Jason Moyo St, Bulawayo");
 
         log.warn("Seeded demo users (reception, manager, dr.moyo, dr.ncube) with the configured seed password. "
                 + "Change it and set clinic.seed.enabled=false before any real use.");
@@ -57,11 +57,12 @@ public class DataSeeder implements CommandLineRunner {
         clinicians.save(c);
     }
 
-    private void patient(String nid, String first, String last, String phone, String address) {
+    private void patient(String nid, String first, String last, String email, String phone, String address) {
         Patient p = new Patient();
         p.setNationalId(nid);
         p.setFirstName(first);
         p.setLastName(last);
+        p.setEmail(email);
         p.setPhone(phone);
         p.setAddress(address);
         patients.save(p);

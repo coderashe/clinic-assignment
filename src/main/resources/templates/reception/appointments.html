@@ -9,36 +9,97 @@
     <div class="col-xl-3 col-lg-4">
       <div class="card shadow-sm"><div class="card-header fw-semibold">Book appointment</div>
         <div class="card-body">
-          <form th:action="@{/reception/appointments}" method="post">
-            <input class="form-control mb-2" name="nationalId" placeholder="Patient National ID" required>
-            <select class="form-select mb-2" name="clinicianId" required>
-              <option value="">Clinician...</option>
-              <option th:each="c : ${clinicians}" th:value="${c.id}" th:text="${c.displayName()} + ' - ' + ${c.roomNumber}"></option>
-            </select>
-            <input class="form-control mb-2" type="datetime-local" name="start" step="900" required>
-            <select class="form-select mb-3" name="duration">
-              <option th:each="d : ${durations}" th:value="${d}" th:text="${d} + ' minutes'" th:selected="${d == defaultDuration}"></option>
-            </select>
+          <form th:action="@{/reception/appointments}" th:object="${bookingForm}" method="post" class="needs-validation" novalidate id="bookingForm">
+            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger p-2 mb-2">
+              <div th:each="err : ${#fields.globalErrors()}" th:text="${err}"></div>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label small text-muted mb-1" for="bookNationalId">Patient National ID</label>
+              <input id="bookNationalId" class="form-control" th:field="*{nationalId}"
+                     th:classappend="${#fields.hasErrors('nationalId')} ? 'is-invalid' : ''"
+                     placeholder="e.g. 63-123456A12" required pattern="^[A-Za-z0-9-]{5,32}$">
+              <div class="invalid-feedback" th:if="${#fields.hasErrors('nationalId')}" th:errors="*{nationalId}"></div>
+              <div class="invalid-feedback" th:unless="${#fields.hasErrors('nationalId')}">Patient National ID is required.</div>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label small text-muted mb-1" for="clinicianSelect">Clinician</label>
+              <select id="clinicianSelect" class="form-select" th:field="*{clinicianId}"
+                      th:classappend="${#fields.hasErrors('clinicianId')} ? 'is-invalid' : ''" required>
+                <option value="">Choose clinician...</option>
+                <option th:each="c : ${clinicians}" th:value="${c.id}" th:text="${c.displayName()} + ' - ' + ${c.roomNumber}"></option>
+              </select>
+              <div class="invalid-feedback" th:if="${#fields.hasErrors('clinicianId')}" th:errors="*{clinicianId}"></div>
+              <div class="invalid-feedback" th:unless="${#fields.hasErrors('clinicianId')}">Please select a clinician.</div>
+            </div>
+
+            <div class="mb-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label class="form-label small text-muted mb-0" for="startDateTime">Date & Time</label>
+                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" id="btnSetNow">
+                  <i class="fa-solid fa-clock"></i> Set to now
+                </button>
+              </div>
+              <input id="startDateTime" class="form-control datetime-slot-input" type="datetime-local" th:field="*{start}"
+                     th:classappend="${#fields.hasErrors('start')} ? 'is-invalid' : ''"
+                     step="60" required>
+              <div class="invalid-feedback" th:if="${#fields.hasErrors('start')}" th:errors="*{start}"></div>
+              <div class="invalid-feedback" th:unless="${#fields.hasErrors('start')}">Please select a time today or in the future during clinic hours (08:00 - 17:00).</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small text-muted mb-1" for="durationSelect">Duration</label>
+              <select id="durationSelect" class="form-select" th:field="*{duration}"
+                      th:classappend="${#fields.hasErrors('duration')} ? 'is-invalid' : ''" required>
+                <option th:each="d : ${durations}" th:value="${d}" th:text="${d} + ' minutes'"></option>
+              </select>
+              <div class="invalid-feedback" th:if="${#fields.hasErrors('duration')}" th:errors="*{duration}"></div>
+              <div class="invalid-feedback" th:unless="${#fields.hasErrors('duration')}">Please choose duration.</div>
+            </div>
+
             <button class="btn btn-primary w-100" type="submit"><i class="fa-solid fa-calendar-plus"></i> Book</button>
           </form>
         </div></div>
     </div>
     <div class="col-xl-9 col-lg-8">
       <div class="card shadow-sm mb-3"><div class="card-body">
-        <form th:action="@{/reception/appointments}" method="get" class="row g-2">
-          <div class="col-md-3"><input class="form-control" name="name" th:value="${name}" placeholder="Patient name"></div>
-          <div class="col-md-2"><input class="form-control" name="nationalId" th:value="${nationalId}" placeholder="National ID"></div>
-          <div class="col-md-2"><input class="form-control" type="date" name="from" th:value="${from}" title="From"></div>
-          <div class="col-md-2"><input class="form-control" type="date" name="to" th:value="${to}" title="To"></div>
-          <div class="col-md-3"><select class="form-select" name="clinicianId">
-            <option value="">All clinicians</option>
-            <option th:each="c : ${clinicians}" th:value="${c.id}" th:text="${c.displayName()}" th:selected="${c.id == clinicianId}"></option>
-          </select></div>
-          <div class="col-md-3"><select class="form-select" name="status">
-            <option value="">Any status</option>
-            <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}" th:selected="${s == status}"></option>
-          </select></div>
-          <div class="col-md-2"><button class="btn btn-outline-primary w-100" type="submit"><i class="fa-solid fa-filter"></i> Filter</button></div>
+        <form th:action="@{/reception/appointments}" th:object="${filterForm}" method="get" class="row g-2 align-items-end needs-validation" novalidate>
+          <div class="col-md-3">
+            <label class="form-label small text-muted mb-0">Patient name</label>
+            <input class="form-control" th:field="*{name}" placeholder="Patient name">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small text-muted mb-0">National ID</label>
+            <input class="form-control" th:field="*{nationalId}" placeholder="National ID">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small text-muted mb-0">From</label>
+            <input class="form-control" type="date" th:field="*{from}" id="filterFromDate">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label small text-muted mb-0">To</label>
+            <input class="form-control" type="date" th:field="*{to}" id="filterToDate"
+                   th:classappend="${#fields.hasErrors('to')} ? 'is-invalid' : ''">
+            <div class="invalid-feedback" th:if="${#fields.hasErrors('to')}" th:errors="*{to}"></div>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted mb-0">Clinician</label>
+            <select class="form-select" th:field="*{clinicianId}">
+              <option value="">All clinicians</option>
+              <option th:each="c : ${clinicians}" th:value="${c.id}" th:text="${c.displayName()}"></option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small text-muted mb-0">Status</label>
+            <select class="form-select" th:field="*{status}">
+              <option value="">Any status</option>
+              <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"></option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button class="btn btn-outline-primary w-100" type="submit"><i class="fa-solid fa-filter"></i> Filter</button>
+          </div>
         </form>
       </div></div>
       <div class="card shadow-sm"><div class="table-responsive"><table class="table table-hover mb-0 align-middle">
@@ -53,19 +114,19 @@
             <td>
               <th:block th:if="${a.status.name() == 'BOOKED'}">
                 <form th:action="@{/reception/appointments/{id}/checkin(id=${a.id})}" method="post" class="d-flex gap-1 mb-1">
-                  <select name="priority" class="form-select form-select-sm">
+                  <select name="priority" class="form-select form-select-sm" required>
                     <option th:each="p : ${priorities}" th:value="${p}" th:text="${p}" th:selected="${p.name() == 'NORMAL'}"></option>
                   </select>
                   <button class="btn btn-sm btn-success text-nowrap" type="submit">Check in</button>
                 </form>
                 <details>
                   <summary class="small text-primary" style="cursor:pointer">Reschedule / cancel</summary>
-                  <form th:action="@{/reception/appointments/{id}/reschedule(id=${a.id})}" method="post" class="d-flex gap-1 mt-1">
-                    <input type="datetime-local" name="start" class="form-control form-control-sm" step="900" required>
-                    <select name="duration" class="form-select form-select-sm" style="width:90px">
+                  <form th:action="@{/reception/appointments/{id}/reschedule(id=${a.id})}" method="post" class="d-flex gap-1 mt-1 needs-validation reschedule-form" novalidate>
+                    <input type="datetime-local" name="start" class="form-control form-control-sm datetime-slot-input" step="60" required>
+                    <select name="duration" class="form-select form-select-sm reschedule-duration" style="width:90px" required>
                       <option th:each="d : ${durations}" th:value="${d}" th:text="${d}" th:selected="${d == a.durationMinutes}"></option>
                     </select>
-                    <button class="btn btn-sm btn-outline-primary" type="submit">Move</button>
+                    <button class="btn btn-sm btn-outline-primary text-nowrap" type="submit">Move</button>
                   </form>
                   <form th:action="@{/reception/appointments/{id}/cancel(id=${a.id})}" method="post" class="mt-1"
                         onsubmit="return confirm('Cancel this appointment?')">
@@ -80,5 +141,93 @@
     </div>
   </div>
 </main>
+
+<script>
+  (function () {
+    'use strict';
+
+    function toLocalIsoString(d) {
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    const now = new Date();
+    // Allow min from today's current time minus 2 minutes
+    const minStart = new Date(now.getTime() - 2 * 60000);
+    minStart.setSeconds(0, 0);
+    const minIso = toLocalIsoString(minStart);
+
+    document.querySelectorAll('.datetime-slot-input').forEach(input => {
+      input.setAttribute('min', minIso);
+      input.addEventListener('change', () => validateSlotInput(input));
+      input.addEventListener('input', () => validateSlotInput(input));
+    });
+
+    const btnSetNow = document.getElementById('btnSetNow');
+    const startInput = document.getElementById('startDateTime');
+    if (btnSetNow && startInput) {
+      btnSetNow.addEventListener('click', function () {
+        const current = new Date();
+        current.setSeconds(0, 0);
+        startInput.value = toLocalIsoString(current);
+        validateSlotInput(startInput);
+        startInput.dispatchEvent(new Event('input', { bubbles: true }));
+        startInput.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    }
+
+    function validateSlotInput(input) {
+      if (!input.value) return;
+      const val = new Date(input.value);
+      const nowTime = new Date();
+
+      // Check not before current time (with 2 min buffer)
+      if (val < new Date(nowTime.getTime() - 2 * 60000)) {
+        input.setCustomValidity('Appointment cannot be scheduled for a past date or time.');
+        return;
+      }
+
+      // Check clinic hours (08:00 to 17:00)
+      const hours = val.getHours();
+      const minutes = val.getMinutes();
+      const minutesOfDay = hours * 60 + minutes;
+      if (minutesOfDay < 8 * 60 || minutesOfDay >= 17 * 60) {
+        input.setCustomValidity('Appointments must fall within clinic hours (08:00 - 17:00).');
+        return;
+      }
+
+      input.setCustomValidity('');
+    }
+
+    // Validate forms on submit
+    document.querySelectorAll('.needs-validation').forEach(form => {
+      form.addEventListener('submit', function (event) {
+        const dtInput = form.querySelector('.datetime-slot-input');
+        if (dtInput) validateSlotInput(dtInput);
+
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      }, false);
+    });
+
+    // Filter date range client-side validation
+    const filterFrom = document.getElementById('filterFromDate');
+    const filterTo = document.getElementById('filterToDate');
+    if (filterFrom && filterTo) {
+      function checkDateRange() {
+        if (filterFrom.value && filterTo.value && filterFrom.value > filterTo.value) {
+          filterTo.setCustomValidity("'To' date cannot be earlier than 'From' date.");
+        } else {
+          filterTo.setCustomValidity('');
+        }
+      }
+      filterFrom.addEventListener('change', checkDateRange);
+      filterTo.addEventListener('change', checkDateRange);
+    }
+  })();
+</script>
 </body>
 </html>

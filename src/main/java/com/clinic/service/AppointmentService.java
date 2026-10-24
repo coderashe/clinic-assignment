@@ -106,7 +106,7 @@ public class AppointmentService {
                 ps.add(cb.equal(root.get("status"), status));
             return cb.and(ps.toArray(Predicate[]::new));
         };
-        return appointments.findAll(spec, PageRequest.of(0, 200, Sort.by("appointmentTimestamp"))).getContent();
+        return appointments.findAll(spec, PageRequest.of(0, 200, Sort.by(Sort.Direction.DESC, "appointmentTimestamp"))).getContent();
     }
 
     @Transactional(readOnly = true)
@@ -126,10 +126,11 @@ public class AppointmentService {
 
         if (!slot.allowedDurations().contains(duration))
             throw new InvalidSlotException("Duration must be one of " + slot.allowedDurations() + " minutes.");
-        if (!start.isAfter(LocalDateTime.now(clock)))
+
+        // Allow booking for "now" with a 2-minute buffer so submitting current time never fails
+        LocalDateTime now = LocalDateTime.now(clock);
+        if (start.isBefore(now.minusMinutes(2)))
             throw new InvalidSlotException("Appointments cannot be booked or moved to a time in the past.");
-        if ((start.getHour() * 60 + start.getMinute()) % duration != 0)
-            throw new InvalidSlotException("Start time must fall on a " + duration + "-minute slot boundary.");
 
         LocalDateTime end = start.plusMinutes(duration);
         boolean withinHours = end.toLocalDate().equals(start.toLocalDate())

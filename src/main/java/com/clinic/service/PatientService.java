@@ -15,11 +15,12 @@ import org.springframework.util.StringUtils;
 public class PatientService {
     private static final Pattern PHONE = Pattern.compile("^\\+?[0-9 ()-]{7,20}$");
     private static final Pattern NATIONAL_ID = Pattern.compile("^[A-Za-z0-9-]{5,32}$");
+    private static final Pattern EMAIL = Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
     private final PatientRepository patients;
 
     @Transactional
-    public Patient register(String nationalId, String firstName, String lastName, String phone, String address) {
+    public Patient register(String nationalId, String firstName, String lastName, String email, String phone, String address) {
         String nid = clean(nationalId);
         if (!NATIONAL_ID.matcher(nid).matches())
             throw new ClinicException("VALIDATION", "National ID must be 5-32 letters, digits or dashes.");
@@ -27,6 +28,9 @@ public class PatientService {
             throw new ClinicException("VALIDATION", "First and last name are required.");
         if (!PHONE.matcher(clean(phone)).matches())
             throw new ClinicException("VALIDATION", "Phone number format is invalid.");
+        String em = clean(email);
+        if (StringUtils.hasText(em) && !EMAIL.matcher(em).matches())
+            throw new ClinicException("VALIDATION", "Email format is invalid.");
         if (!StringUtils.hasText(address))
             throw new ClinicException("VALIDATION", "Address is required.");
         if (patients.existsByNationalId(nid))
@@ -36,6 +40,7 @@ public class PatientService {
         p.setNationalId(nid);
         p.setFirstName(firstName.trim());
         p.setLastName(lastName.trim());
+        p.setEmail(StringUtils.hasText(em) ? em.toLowerCase() : null);
         p.setPhone(clean(phone));
         p.setAddress(address.trim());
         return patients.save(p);

@@ -4,7 +4,7 @@ spring:
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:3306/${DB_NAME:clinic}?createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci&serverTimezone=UTC
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD:Tycoonmaster2}
+    password: ${DB_PASSWORD:root}
   jpa:
     open-in-view: false
     hibernate:

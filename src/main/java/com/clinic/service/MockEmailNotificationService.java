@@ -13,16 +13,22 @@ public class MockEmailNotificationService implements NotificationService {
     @Async
     @Override
     public void sendAppointmentConfirmation(Appointment a) {
-        log.info("[EMAIL -> patient-{}@clinic.invalid] Subject: Appointment confirmed | {} on {} with {}, room {}. thread={}",
-                a.getPatient().getId(), a.getPatient().getFullName(), a.getAppointmentTimestamp(),
+        String recipient = a.getPatient().getEmail() != null
+                ? a.getPatient().getEmail()
+                : ("patient-" + a.getPatient().getId() + "@clinic.invalid");
+        log.info("[EMAIL -> {}] Subject: Appointment confirmed | {} on {} with {}, room {}. thread={}",
+                recipient, a.getPatient().getFullName(), a.getAppointmentTimestamp(),
                 a.getClinician().displayName(), a.getClinician().getRoomNumber(), Thread.currentThread());
     }
 
     @Async
     @Override
     public void sendQueueDelayAlert(QueueEntry q) {
-        log.info("[EMAIL -> patient-{}@clinic.invalid] Subject: Queue delay | position {}, est. wait {} min. thread={}",
-                q.getAppointment().getPatient().getId(), q.getPosition(), q.getEstimatedWaitMinutes(),
+        String recipient = q.getAppointment().getPatient().getEmail() != null
+                ? q.getAppointment().getPatient().getEmail()
+                : ("patient-" + q.getAppointment().getPatient().getId() + "@clinic.invalid");
+        log.info("[EMAIL -> {}] Subject: Queue delay | position {}, est. wait {} min. thread={}",
+                recipient, q.getPosition(), q.getEstimatedWaitMinutes(),
                 Thread.currentThread());
     }
 }

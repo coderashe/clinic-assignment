@@ -41,9 +41,15 @@
     <div class="col-lg-4">
       <div class="card shadow-sm mb-3"><div class="card-header fw-semibold">Booked today, not yet arrived</div>
         <ul class="list-group list-group-flush">
-          <li class="list-group-item" th:each="a : ${booked}">
-            <strong th:text="${#temporals.format(a.appointmentTimestamp,'HH:mm')}"></strong>
-            <span th:text="${a.patient.fullName}"></span></li>
+          <li class="list-group-item d-flex justify-content-between align-items-center" th:each="a : ${booked}">
+            <div>
+              <strong th:text="${#temporals.format(a.appointmentTimestamp,'HH:mm')}"></strong>
+              <span th:text="${a.patient.fullName}"></span>
+            </div>
+            <form th:action="@{/clinician/appointments/{id}/checkin(id=${a.id})}" method="post" class="m-0">
+              <button class="btn btn-sm btn-outline-success" type="submit">Check in</button>
+            </form>
+          </li>
           <li class="list-group-item text-muted" th:if="${#lists.isEmpty(booked)}">None</li>
         </ul></div>
       <div class="card shadow-sm"><div class="card-header fw-semibold">Completed today</div>
